@@ -23,3 +23,16 @@ class VideoData(BaseModel):
     transcript: Optional[str] = None
 
     duration: Optional[int] = None
+
+
+class TranscriptChunk(BaseModel):
+    chunk_id: str
+
+    video_id: str
+    platform: str
+
+    chunk_index: int
+
+    text: str
+
+    source_url: str
