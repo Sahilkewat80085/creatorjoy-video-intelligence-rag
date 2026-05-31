@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.ingest import router as ingest_router
 from app.api.chat import router as chat_router
 from dotenv import load_dotenv, find_dotenv
@@ -7,6 +8,15 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 app = FastAPI(title="CreatorJoy Video Intelligence API")
+
+# Allow the Next.js dev server (and any local origin) to call the API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include the routers
 app.include_router(ingest_router)

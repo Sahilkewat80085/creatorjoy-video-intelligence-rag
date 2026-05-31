@@ -10,9 +10,19 @@ router = APIRouter()
 ingestion_service = IngestionService()
 vector_pipeline = VectorPipeline()
 
+from fastapi import HTTPException
+
 class IngestRequest(BaseModel):
-    youtube_url: Optional[str] = None
-    instagram_url: Optional[str] = None
+    video_a_url: Optional[str] = None
+    video_b_url: Optional[str] = None
+
+def get_video_provider(url: str, ingestion_service: IngestionService):
+    if "youtube.com" in url or "youtu.be" in url:
+        return ingestion_service.youtube_provider
+    elif "instagram.com" in url:
+        return ingestion_service.instagram_provider
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported URL platform: {url}")
 
 @router.post("/api/ingest")
 def ingest(request: IngestRequest):
@@ -21,13 +31,15 @@ def ingest(request: IngestRequest):
     
     result = {"status": "success"}
     
-    if request.youtube_url:
-        video_data = ingestion_service.youtube_provider.extract(request.youtube_url)
+    if request.video_a_url:
+        provider = get_video_provider(request.video_a_url, ingestion_service)
+        video_data = provider.extract(request.video_a_url)
         vector_pipeline.process_video(video_data, label="Video A")
         result["video_a"] = video_data.model_dump()
         
-    if request.instagram_url:
-        video_data = ingestion_service.instagram_provider.extract(request.instagram_url)
+    if request.video_b_url:
+        provider = get_video_provider(request.video_b_url, ingestion_service)
+        video_data = provider.extract(request.video_b_url)
         vector_pipeline.process_video(video_data, label="Video B")
         result["video_b"] = video_data.model_dump()
         
