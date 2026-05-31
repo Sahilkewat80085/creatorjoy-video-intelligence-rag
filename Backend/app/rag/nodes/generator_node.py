@@ -1,6 +1,7 @@
 import os
 import google.generativeai as genai
 from app.rag.state import ChatState
+from app.rag.memory_store import session_memory
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -16,6 +17,23 @@ def generator_node(state: ChatState) -> ChatState:
     prompt = state.get("prompt", "")
     
     response = model.generate_content(prompt)
+    answer = response.text
     
-    state["answer"] = response.text
+    state["answer"] = answer
+    
+    session_id = state.get("session_id", "default")
+    history = session_memory.get(session_id, [])
+    
+    history.append({
+        "role": "user",
+        "content": state["question"]
+    })
+    
+    history.append({
+        "role": "assistant",
+        "content": answer
+    })
+    
+    session_memory[session_id] = history
+    
     return state

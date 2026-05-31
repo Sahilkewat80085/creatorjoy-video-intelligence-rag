@@ -23,12 +23,12 @@ def ingest(request: IngestRequest):
     
     if request.youtube_url:
         video_data = ingestion_service.youtube_provider.extract(request.youtube_url)
-        vector_pipeline.process_video(video_data)
+        vector_pipeline.process_video(video_data, label="Video A")
         result["video_a"] = video_data.model_dump()
         
     if request.instagram_url:
         video_data = ingestion_service.instagram_provider.extract(request.instagram_url)
-        vector_pipeline.process_video(video_data)
+        vector_pipeline.process_video(video_data, label="Video B")
         result["video_b"] = video_data.model_dump()
         
     return result
