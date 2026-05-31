@@ -1,8 +1,10 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
-    VectorParams
+    VectorParams,
+    PointStruct
 )
+from app.models.schemas import TranscriptChunk
 
 
 class QdrantStore:
@@ -40,3 +42,21 @@ class QdrantStore:
         else:
 
             print("Collection already exists")
+
+    def store_chunk(self, chunk: TranscriptChunk, embedding: list[float]):
+        point = PointStruct(
+            id=chunk.chunk_id,
+            vector=embedding,
+            payload={
+                "video_id": chunk.video_id,
+                "platform": chunk.platform,
+                "chunk_index": chunk.chunk_index,
+                "text": chunk.text,
+                "source_url": chunk.source_url
+            }
+        )
+        
+        self.client.upsert(
+            collection_name=self.COLLECTION_NAME,
+            points=[point]
+        )
