@@ -60,3 +60,13 @@ class QdrantStore:
             collection_name=self.COLLECTION_NAME,
             points=[point]
         )
+
+    def search(self, query_embedding: list[float], limit: int = 3):
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            query=query_embedding,
+            limit=limit
+        )
+        # return the points list which matches the expected return format
+        return results.points
+
