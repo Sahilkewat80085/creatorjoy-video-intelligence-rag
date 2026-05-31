@@ -58,6 +58,7 @@ class QdrantStore:
             payload={
                 "video_id": chunk.video_id,
                 "platform": chunk.platform,
+                "label": chunk.label,
                 "chunk_index": chunk.chunk_index,
                 "text": chunk.text,
                 "source_url": chunk.source_url

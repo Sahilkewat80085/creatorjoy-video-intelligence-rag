@@ -30,6 +30,7 @@ class TranscriptChunk(BaseModel):
 
     video_id: str
     platform: str
+    label: Optional[str] = None
 
     chunk_index: int
 

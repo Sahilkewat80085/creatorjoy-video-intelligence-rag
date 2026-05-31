@@ -21,4 +21,7 @@ def chat(request: ChatRequest):
     
     result = langgraph_app.invoke(initial_state)
     
-    return {"answer": result.get("answer", "")}
+    return {
+        "answer": result.get("answer", ""),
+        "citations": result.get("citations", [])
+    }

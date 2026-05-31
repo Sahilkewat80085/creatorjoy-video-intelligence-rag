@@ -53,6 +53,7 @@ class VectorPipeline:
                 chunk_id=chunk_id,
                 video_id=video.video_id,
                 platform=video.platform,
+                label=label,
                 chunk_index=i,
                 text=full_chunk_text,
                 source_url=video.source_url
