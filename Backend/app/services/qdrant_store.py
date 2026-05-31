@@ -43,6 +43,14 @@ class QdrantStore:
 
             print("Collection already exists")
 
+    def recreate_collection(self):
+        print("Recreating collection (clearing old data)...")
+        try:
+            self.client.delete_collection(self.COLLECTION_NAME)
+        except Exception:
+            pass
+        self.create_collection()
+
     def store_chunk(self, chunk: TranscriptChunk, embedding: list[float]):
         point = PointStruct(
             id=chunk.chunk_id,
