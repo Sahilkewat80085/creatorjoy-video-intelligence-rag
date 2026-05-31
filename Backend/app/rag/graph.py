@@ -21,5 +21,19 @@ workflow.add_edge("retriever", "prompt")
 workflow.add_edge("prompt", "generator")
 workflow.add_edge("generator", END)
 
-# Compile the graph
+# Compile the standard graph
 app = workflow.compile()
+
+# Define the stream graph that stops at prompt
+stream_workflow = StateGraph(ChatState)
+stream_workflow.add_node("memory", memory_node)
+stream_workflow.add_node("retriever", retriever_node)
+stream_workflow.add_node("prompt", prompt_node)
+
+stream_workflow.set_entry_point("memory")
+stream_workflow.add_edge("memory", "retriever")
+stream_workflow.add_edge("retriever", "prompt")
+stream_workflow.add_edge("prompt", END)
+
+# Compile the stream graph
+stream_app = stream_workflow.compile()
