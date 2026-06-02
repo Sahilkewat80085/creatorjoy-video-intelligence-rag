@@ -29,6 +29,9 @@ async def lifespan(app: FastAPI):
     print(f"QDRANT_URL length: {len(qdrant_url)}")
     print(f"QDRANT_API_KEY length: {len(qdrant_api_key)}")
     
+    apify_token = os.getenv("APIFY_API_TOKEN", "").strip()
+    print(f"[APIFY] Checking APIFY_API_TOKEN presence: {'Yes' if apify_token else 'No'}")
+    
     print(f"[QDRANT] Checking QDRANT_URL presence: {'Yes' if qdrant_url else 'No'}")
     print(f"[QDRANT] Checking QDRANT_API_KEY presence: {'Yes' if qdrant_api_key else 'No'}")
     

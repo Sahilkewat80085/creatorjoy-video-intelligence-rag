@@ -16,23 +16,34 @@ class YouTubeProvider:
         views, likes, comments, duration_sec = 0, 0, 0, 0
         creator = "YouTube Creator"
         
-        apify_token = os.getenv("APIFY_API_TOKEN")
+        apify_token = os.getenv("APIFY_API_TOKEN", "").strip()
         if not apify_token:
             logger.error("[YouTube Extractor Error] APIFY_API_TOKEN is missing or empty! Metadata will be 0.")
         else:
             try:
-                logger.info(f"[YouTube Extractor] Calling Apify youtube-scraper for {video_id}")
-                client = ApifyClient(apify_token)
+                actor_id = "streamers/youtube-scraper"
                 run_input = {
                     "startUrls": [{"url": url}],
                     "maxResults": 1,
                 }
-                run = client.actor("streamers/youtube-scraper").call(run_input=run_input)
-                dataset_id = run.default_dataset_id if hasattr(run, 'default_dataset_id') else run['defaultDatasetId']
+                logger.info(f"[YouTube Extractor] Calling Apify actor: {actor_id}")
+                logger.info(f"[YouTube Extractor] Input payload: {run_input}")
+                
+                client = ApifyClient(apify_token)
+                run = client.actor(actor_id).call(run_input=run_input)
+                
+                run_id = run.get('id', 'UNKNOWN_RUN_ID')
+                logger.info(f"[YouTube Extractor] Apify actor invoked successfully. Run ID: {run_id}")
+                
+                dataset_id = run.default_dataset_id if hasattr(run, 'default_dataset_id') else run.get('defaultDatasetId')
                 items = list(client.dataset(dataset_id).iterate_items())
+                
+                logger.info(f"[YouTube Extractor] Raw Apify response items count: {len(items)}")
                 
                 if items:
                     item = items[0]
+                    logger.info(f"[YouTube Extractor] Raw Apify item: {item}")
+                    
                     video_id = item.get('id', video_id)
                     views = item.get('viewCount', 0) or 0
                     likes = item.get('likes', 0) or 0
