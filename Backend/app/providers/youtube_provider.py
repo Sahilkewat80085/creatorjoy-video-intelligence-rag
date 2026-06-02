@@ -18,7 +18,8 @@ class YouTubeProvider:
         
         apify_token = os.getenv("APIFY_API_TOKEN", "").strip()
         if not apify_token:
-            logger.error("[YouTube Extractor Error] APIFY_API_TOKEN is missing or empty! Metadata will be 0.")
+            logger.error("[YouTube Extractor Error] APIFY_API_TOKEN is missing or empty!")
+            raise ValueError("APIFY_API_TOKEN is missing or empty!")
         else:
             try:
                 actor_id = "streamers/youtube-scraper"
@@ -60,11 +61,12 @@ class YouTubeProvider:
                             duration_sec = int(parts[0])*60 + int(parts[1])
                     logger.info(f"[YouTube Extractor] Apify metadata successful: views={views}, creator={creator}")
                 else:
-                    logger.warning("[YouTube Extractor Warning] Apify returned 0 items. Metadata will be 0.")
+                    logger.error("[YouTube Extractor Error] Apify returned 0 items.")
+                    raise ValueError(f"Apify youtube-scraper returned no data for {url}")
                         
             except Exception as e:
                 logger.error(f"[YouTube Extractor Error] Apify metadata extraction failed:\n{traceback.format_exc()}")
-                # Removed silent fallback! Let it return 0s so it's obvious there's an error.
+                raise e # Re-raise to fail the request explicitly
 
         # get transcript
         transcript_text = ""
