@@ -21,6 +21,8 @@ class VideoData(BaseModel):
 
     caption: Optional[str] = None
     transcript: Optional[str] = None
+    transcript_source: Optional[str] = None
+    direct_media_url: Optional[str] = None
 
     duration: Optional[int] = None
 

@@ -9,9 +9,10 @@ export interface VideoData {
   comments: number;
   engagement_rate: number;
   hashtags: string[];
-  caption: string | null;
-  transcript: string;
-  duration: number;
+  caption?: string;
+  transcript?: string;
+  transcript_source?: string;
+  duration?: number;
 }
 
 export interface IngestResponse {

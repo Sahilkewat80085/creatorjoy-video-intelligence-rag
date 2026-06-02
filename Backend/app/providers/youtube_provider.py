@@ -44,6 +44,7 @@ class YouTubeProvider:
 
         # get transcript
         transcript_text = ""
+        transcript_source = None
         try:
             api = YouTubeTranscriptApi()
             t_list = api.list(video_id)
@@ -59,8 +60,12 @@ class YouTubeProvider:
             transcript_text = " ".join(
                 [t.get('text', '') if isinstance(t, dict) else getattr(t, 'text', '') for t in raw_transcript]
             )
+            
+            if transcript_text:
+                transcript_source = "native"
+                
         except Exception as e:
-            print(f"Warning: Could not extract transcript: {e}")
+            print(f"Warning: Could not extract transcript natively: {e}")
 
         # calculate engagement
         engagement_rate = 0.0
@@ -76,6 +81,8 @@ class YouTubeProvider:
             likes=likes,
             comments=comments,
             engagement_rate=round(engagement_rate, 2),
-            transcript=transcript_text,
+            transcript=transcript_text if transcript_text else None,
+            transcript_source=transcript_source,
+            direct_media_url=url, # yt-dlp can download from the standard URL
             duration=duration_sec
         )

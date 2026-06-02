@@ -49,6 +49,8 @@ class InstagramProvider:
         if views > 0:
             engagement_rate = ((likes + comments) / views) * 100
             
+        direct_media_url = item.get("videoUrl")
+            
         return VideoData(
             platform="instagram",
             video_id=shortcode,
@@ -62,5 +64,7 @@ class InstagramProvider:
             hashtags=hashtags,
             caption=caption,
             transcript=None,
+            transcript_source=None,
+            direct_media_url=direct_media_url,
             duration=None
         )

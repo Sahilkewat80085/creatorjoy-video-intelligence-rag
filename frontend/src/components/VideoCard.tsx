@@ -112,6 +112,20 @@ export default function VideoCard({ video, label }: VideoCardProps) {
           </div>
           <span className="text-xl font-bold">{video.engagement_rate.toFixed(2)}%</span>
         </div>
+
+        {/* Transcript Source */}
+        <div className="col-span-2 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+          <div className="flex items-center gap-2 text-white/70">
+            <span className="text-sm font-medium">Transcript Source</span>
+          </div>
+          <span className={`text-sm font-semibold capitalize ${
+            video.transcript_source === 'native' ? 'text-emerald-400' :
+            video.transcript_source === 'whisper' ? 'text-amber-400' :
+            'text-rose-400'
+          }`}>
+            {video.transcript_source ? `${video.transcript_source} Transcript` : 'Transcript Unavailable'}
+          </span>
+        </div>
       </div>
 
       {/* Caption */}
