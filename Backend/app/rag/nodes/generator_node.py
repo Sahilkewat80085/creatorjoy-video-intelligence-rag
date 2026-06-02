@@ -21,6 +21,13 @@ def generator_node(state: ChatState) -> ChatState:
     
     state["answer"] = answer
     
+    # Filter citations
+    from app.rag.citation_evaluator import filter_citations
+    all_citations = state.get("citations", [])
+    if all_citations:
+        filtered = filter_citations(state["question"], answer, all_citations)
+        state["citations"] = filtered
+    
     session_id = state.get("session_id", "default")
     history = session_memory.get(session_id, [])
     

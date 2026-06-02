@@ -24,7 +24,8 @@ def retriever_node(state: ChatState) -> ChatState:
         citations.append({
             "source": "transcript",
             "video_id": payload.get("video_id"),
-            "chunk_index": payload.get("chunk_index")
+            "chunk_index": payload.get("chunk_index"),
+            "score": round(r.score, 4) if hasattr(r, 'score') and r.score is not None else 0.0
         })
         
         # Metadata citation

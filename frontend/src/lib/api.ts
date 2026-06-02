@@ -45,7 +45,7 @@ export async function chat(
 export async function* chatStream(
   sessionId: string,
   question: string
-): AsyncGenerator<string> {
+): AsyncGenerator<{ type: string; content?: string; citations?: Citation[] }> {
   const res = await fetch(`${API_BASE}/api/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -61,11 +61,24 @@ export async function* chatStream(
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
+  let buffer = "";
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    const text = decoder.decode(value, { stream: true });
-    if (text) yield text;
+    
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    
+    for (const line of lines) {
+      if (line.trim()) {
+        try {
+          yield JSON.parse(line);
+        } catch (e) {
+          console.error("Failed to parse stream line:", line);
+        }
+      }
+    }
   }
 }

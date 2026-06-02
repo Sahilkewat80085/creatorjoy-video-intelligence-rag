@@ -45,12 +45,23 @@ def stream_chat(request: ChatRequest):
     prompt = result.get("prompt", "")
     
     def generate():
+        import json
+        from app.rag.citation_evaluator import filter_citations
+        
         response = model.generate_content(prompt, stream=True)
         full_answer = ""
         for chunk in response:
             if chunk.text:
                 full_answer += chunk.text
-                yield chunk.text
+                yield json.dumps({"type": "token", "content": chunk.text}) + "\n"
+                
+        # Evaluate citations
+        all_citations = result.get("citations", [])
+        filtered_citations = []
+        if all_citations:
+            filtered_citations = filter_citations(request.question, full_answer, all_citations)
+            
+        yield json.dumps({"type": "citations", "citations": filtered_citations}) + "\n"
                 
         # Update memory after stream completes
         session_id = request.session_id
@@ -65,4 +76,4 @@ def stream_chat(request: ChatRequest):
         })
         session_memory[session_id] = history
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="application/x-ndjson")

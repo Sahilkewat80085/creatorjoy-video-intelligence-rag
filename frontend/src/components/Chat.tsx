@@ -65,12 +65,20 @@ export default function Chat({ sessionId, disabled }: ChatProps) {
     try {
       let accumulated = "";
       for await (const chunk of chatStream(sessionId, question)) {
-        accumulated += chunk;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId ? { ...m, content: accumulated } : m
-          )
-        );
+        if (chunk.type === "token" && chunk.content) {
+          accumulated += chunk.content;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, content: accumulated } : m
+            )
+          );
+        } else if (chunk.type === "citations" && chunk.citations) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, citations: chunk.citations } : m
+            )
+          );
+        }
       }
 
       setMessages((prev) =>
