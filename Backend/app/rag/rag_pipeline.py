@@ -13,7 +13,7 @@ class SimpleRAGPipeline:
             raise ValueError("GEMINI_API_KEY is not set.")
             
         genai.configure(api_key=gemini_api_key)
-        self.model = genai.GenerativeModel("gemini-2.5-flash")
+        self.model = genai.GenerativeModel("gemini-1.5-flash")
 
     def ask(self, question: str) -> str:
         # Embed Query

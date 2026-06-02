@@ -9,7 +9,7 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 if gemini_api_key:
     genai.configure(api_key=gemini_api_key)
 
-eval_model = genai.GenerativeModel("gemini-2.5-flash")
+eval_model = genai.GenerativeModel("gemini-1.5-flash")
 
 def filter_citations(question: str, answer: str, all_citations: list) -> list:
     """

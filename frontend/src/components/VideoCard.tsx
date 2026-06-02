@@ -98,7 +98,7 @@ export default function VideoCard({ video, label }: VideoCardProps) {
         </div>
         <div className="flex items-center gap-2 text-sm text-white/70">
           <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-          <span className="font-medium text-white">{formatDuration(video.duration)}</span>
+          <span className="font-medium text-white">{formatDuration(video.duration || 0)}</span>
           <span className="text-white/40 text-xs">duration</span>
         </div>
 

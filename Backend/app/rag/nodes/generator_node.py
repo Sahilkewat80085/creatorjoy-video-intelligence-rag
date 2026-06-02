@@ -11,7 +11,7 @@ if gemini_api_key:
     genai.configure(api_key=gemini_api_key)
 
 # We use the updated model name directly
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 def generator_node(state: ChatState) -> ChatState:
     prompt = state.get("prompt", "")
