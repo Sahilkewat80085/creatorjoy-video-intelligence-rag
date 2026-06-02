@@ -12,7 +12,7 @@ app = FastAPI(title="CreatorJoy Video Intelligence API")
 # Allow the Next.js dev server (and any local origin) to call the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["*"], # Allow any frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
