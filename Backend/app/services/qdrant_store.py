@@ -12,10 +12,16 @@ class QdrantStore:
     COLLECTION_NAME = "video_chunks"
 
     def __init__(self):
+        import os
+        qdrant_url = os.getenv("QDRANT_URL")
+        qdrant_api_key = os.getenv("QDRANT_API_KEY")
+
+        if not qdrant_url or not qdrant_api_key:
+            raise ValueError("[QDRANT] Connection failed: missing QDRANT_URL or QDRANT_API_KEY environment variables")
 
         self.client = QdrantClient(
-            host="localhost",
-            port=6333
+            url=qdrant_url,
+            api_key=qdrant_api_key
         )
 
     def create_collection(self):

@@ -7,7 +7,37 @@ from dotenv import load_dotenv, find_dotenv
 # Ensure environment variables are loaded for the app
 load_dotenv(find_dotenv())
 
-app = FastAPI(title="CreatorJoy Video Intelligence API")
+from contextlib import asynccontextmanager
+import os
+import logging
+from qdrant_client import QdrantClient
+
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup validation
+    qdrant_url = os.getenv("QDRANT_URL")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    
+    print(f"[QDRANT] Checking QDRANT_URL presence: {'Yes' if qdrant_url else 'No'}")
+    print(f"[QDRANT] Checking QDRANT_API_KEY presence: {'Yes' if qdrant_api_key else 'No'}")
+    
+    if not qdrant_url or not qdrant_api_key:
+        raise ValueError("[QDRANT] Connection failed: invalid URL or API key (missing variables)")
+        
+    try:
+        print("[QDRANT] Connecting to cloud cluster...")
+        client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+        client.get_collections()
+        print("[QDRANT] Connection successful")
+    except Exception as e:
+        raise ConnectionError(f"[QDRANT] Connection failed: {e}")
+        
+    yield
+    # Shutdown logic if any
+
+app = FastAPI(title="CreatorJoy Video Intelligence API", lifespan=lifespan)
 
 # Allow the Next.js dev server (and any local origin) to call the API
 app.add_middleware(

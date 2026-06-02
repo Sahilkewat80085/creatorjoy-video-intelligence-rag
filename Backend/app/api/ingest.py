@@ -27,7 +27,18 @@ def get_video_provider(url: str, ingestion_service: IngestionService):
 @router.post("/api/ingest")
 def ingest(request: IngestRequest):
     # Clear the old data before inserting new videos
-    vector_pipeline.store.recreate_collection()
+    from fastapi.responses import JSONResponse
+    try:
+        vector_pipeline.store.recreate_collection()
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "message": "Vector database unavailable",
+                "detail": str(e)
+            }
+        )
     
     result = {"status": "success"}
     
