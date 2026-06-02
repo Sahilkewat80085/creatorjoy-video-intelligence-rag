@@ -13,8 +13,8 @@ class QdrantStore:
 
     def __init__(self):
         import os
-        qdrant_url = os.getenv("QDRANT_URL")
-        qdrant_api_key = os.getenv("QDRANT_API_KEY")
+        qdrant_url = os.getenv("QDRANT_URL", "").strip()
+        qdrant_api_key = os.getenv("QDRANT_API_KEY", "").strip()
 
         if not qdrant_url or not qdrant_api_key:
             raise ValueError("[QDRANT] Connection failed: missing QDRANT_URL or QDRANT_API_KEY environment variables")

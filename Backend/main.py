@@ -17,8 +17,17 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup validation
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    raw_url = os.getenv("QDRANT_URL", "")
+    raw_key = os.getenv("QDRANT_API_KEY", "")
+    
+    print(f"QDRANT_URL repr: {repr(raw_url)}")
+    print(f"QDRANT_API_KEY repr: {repr(raw_key)}")
+    
+    qdrant_url = raw_url.strip()
+    qdrant_api_key = raw_key.strip()
+    
+    print(f"QDRANT_URL length: {len(qdrant_url)}")
+    print(f"QDRANT_API_KEY length: {len(qdrant_api_key)}")
     
     print(f"[QDRANT] Checking QDRANT_URL presence: {'Yes' if qdrant_url else 'No'}")
     print(f"[QDRANT] Checking QDRANT_API_KEY presence: {'Yes' if qdrant_api_key else 'No'}")
