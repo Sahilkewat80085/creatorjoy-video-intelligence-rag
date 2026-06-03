@@ -1,5 +1,7 @@
 import json
 import os
+import re
+from typing import List, Dict, Any, Optional
 import google.generativeai as genai
 from dotenv import load_dotenv, find_dotenv
 
@@ -19,7 +21,7 @@ def filter_citations(question: str, answer: str, citations: List[dict]) -> List[
         return []
 
     # Format the citations for the prompt
-    citations_json = json.dumps(all_citations, indent=2)
+    citations_json = json.dumps(citations, indent=2)
     
     prompt = f"""You are a strict citation evaluator.
 Your job is to determine which of the provided citations were ACTUALLY used to generate the answer to the user's question.
@@ -55,4 +57,4 @@ Return the JSON array now:"""
         print(f"Citation evaluator failed: {e}")
         
     # Fallback to returning all if evaluation fails
-    return all_citations
+    return citations
