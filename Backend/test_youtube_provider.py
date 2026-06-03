@@ -4,6 +4,8 @@ if sys.stdout.encoding.lower() != 'utf-8':
 
 from app.providers.youtube_provider import YouTubeProvider
 import json
+from dotenv import load_dotenv
+load_dotenv()
 
 provider = YouTubeProvider()
 

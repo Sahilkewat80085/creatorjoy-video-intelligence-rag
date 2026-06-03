@@ -33,10 +33,16 @@ class YouTubeProvider:
                 client = ApifyClient(apify_token)
                 run = client.actor(actor_id).call(run_input=run_input)
                 
-                run_id = run.get('id', 'UNKNOWN_RUN_ID')
+                logger.info(f"[YouTube Extractor] Apify run object type: {type(run)}")
+                logger.info(f"[YouTube Extractor] Apify run object: {run}")
+                
+                run_id = getattr(run, 'id', 'UNKNOWN_RUN_ID')
                 logger.info(f"[YouTube Extractor] Apify actor invoked successfully. Run ID: {run_id}")
                 
-                dataset_id = run.default_dataset_id if hasattr(run, 'default_dataset_id') else run.get('defaultDatasetId')
+                dataset_id = getattr(run, 'default_dataset_id', getattr(run, 'defaultDatasetId', None))
+                if not dataset_id:
+                    raise ValueError("Could not find default_dataset_id on Run object")
+                    
                 items = list(client.dataset(dataset_id).iterate_items())
                 
                 logger.info(f"[YouTube Extractor] Raw Apify response items count: {len(items)}")

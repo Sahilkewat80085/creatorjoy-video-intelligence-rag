@@ -21,7 +21,13 @@ class InstagramProvider:
         # Run the Apify actor
         run = client.actor("apify/instagram-scraper").call(run_input=run_input)
         
-        dataset_id = run.default_dataset_id if hasattr(run, 'default_dataset_id') else run['defaultDatasetId']
+        print(f"[Instagram Extractor] Apify run object type: {type(run)}")
+        print(f"[Instagram Extractor] Apify run object: {run}")
+        
+        dataset_id = getattr(run, 'default_dataset_id', getattr(run, 'defaultDatasetId', None))
+        if not dataset_id:
+            raise ValueError("Could not find default_dataset_id on Run object")
+            
         items = list(client.dataset(dataset_id).iterate_items())
         
         if not items:
