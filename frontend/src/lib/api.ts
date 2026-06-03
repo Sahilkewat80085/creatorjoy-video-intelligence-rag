@@ -1,13 +1,12 @@
 import { IngestResponse, Citation } from "@/types";
 
-// Connect directly to backend to bypass Next.js proxy timeouts (Apify takes 45s+)
-const API_BASE = "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://creatorjoy-video-intelligence-rag-production.up.railway.app";
 
 export async function ingestVideos(
   videoAUrl: string,
   videoBUrl: string
 ): Promise<IngestResponse> {
-  const res = await fetch(`${API_BASE}/api/ingest`, {
+  const res = await fetch(`${API_BASE_URL}/api/ingest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -28,7 +27,7 @@ export async function chat(
   sessionId: string,
   question: string
 ): Promise<{ answer: string; citations: Citation[] }> {
-  const res = await fetch(`${API_BASE}/api/chat`, {
+  const res = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, question }),
@@ -46,7 +45,7 @@ export async function* chatStream(
   sessionId: string,
   question: string
 ): AsyncGenerator<{ type: string; content?: string; citations?: Citation[] }> {
-  const res = await fetch(`${API_BASE}/api/chat/stream`, {
+  const res = await fetch(`${API_BASE_URL}/api/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, question }),
