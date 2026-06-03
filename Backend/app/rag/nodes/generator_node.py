@@ -16,8 +16,13 @@ model = genai.GenerativeModel("gemini-2.5-flash")
 def generator_node(state: ChatState) -> ChatState:
     prompt = state.get("prompt", "")
     
-    response = model.generate_content(prompt)
-    answer = response.text
+    try:
+        response = model.generate_content(prompt)
+        answer = response.text
+    except ValueError:
+        answer = "I cannot determine this from the available video data. The model was unable to generate a valid response."
+    except Exception as e:
+        answer = f"An error occurred while generating the response: {str(e)}"
     
     state["answer"] = answer
     

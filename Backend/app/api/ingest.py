@@ -45,12 +45,14 @@ def ingest(request: IngestRequest):
     if request.video_a_url:
         provider = get_video_provider(request.video_a_url, ingestion_service)
         video_data = provider.extract(request.video_a_url)
+        video_data = ingestion_service._apply_whisper_fallback(video_data)
         vector_pipeline.process_video(video_data, label="Video A")
         result["video_a"] = video_data.model_dump()
         
     if request.video_b_url:
         provider = get_video_provider(request.video_b_url, ingestion_service)
         video_data = provider.extract(request.video_b_url)
+        video_data = ingestion_service._apply_whisper_fallback(video_data)
         vector_pipeline.process_video(video_data, label="Video B")
         result["video_b"] = video_data.model_dump()
         

@@ -16,7 +16,7 @@ def chat(request: ChatRequest):
     initial_state = {
         "session_id": request.session_id,
         "question": request.question,
-        "history": [],
+        "history": session_memory.get(request.session_id, []),
         "retrieved_chunks": [],
         "citations": [],
         "answer": ""
@@ -34,7 +34,7 @@ def stream_chat(request: ChatRequest):
     initial_state = {
         "session_id": request.session_id,
         "question": request.question,
-        "history": [],
+        "history": session_memory.get(request.session_id, []),
         "retrieved_chunks": [],
         "citations": [],
         "answer": ""
@@ -48,12 +48,19 @@ def stream_chat(request: ChatRequest):
         import json
         from app.rag.citation_evaluator import filter_citations
         
-        response = model.generate_content(prompt, stream=True)
-        full_answer = ""
-        for chunk in response:
-            if chunk.text:
-                full_answer += chunk.text
-                yield json.dumps({"type": "token", "content": chunk.text}) + "\n"
+        try:
+            response = model.generate_content(prompt, stream=True)
+            full_answer = ""
+            for chunk in response:
+                if chunk.text:
+                    full_answer += chunk.text
+                    yield json.dumps({"type": "token", "content": chunk.text}) + "\n"
+        except ValueError:
+            full_answer = "I cannot determine this from the available video data. The model was unable to generate a valid response."
+            yield json.dumps({"type": "token", "content": full_answer}) + "\n"
+        except Exception as e:
+            full_answer = f"An error occurred while generating the response: {str(e)}"
+            yield json.dumps({"type": "token", "content": full_answer}) + "\n"
                 
         # Evaluate citations
         all_citations = result.get("citations", [])
