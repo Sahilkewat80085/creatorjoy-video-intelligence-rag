@@ -14,7 +14,7 @@
 
 ---
 
-## Introduction for Evaluators
+## Introduction 
 
 This repository contains a deeply engineered, production-ready RAG application designed to handle edge cases gracefully. 
 
