@@ -1,14 +1,22 @@
 import sys
 import os
+import logging
 
+# Ensure backend directory is in path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from app.rag.nodes.prompt_node import prompt_node
 from app.rag.nodes.generator_node import generator_node
 from app.rag.citation_evaluator import filter_citations
 
-def test_citation(test_name, question, expected_sources, mock_chunks, mock_citations):
-    print(f"\n--- {test_name} ---")
-    print(f"Question: {question}")
+# Configure basic logging to stream to stdout
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+
+def test_citation(test_name: str, question: str, expected_sources: set, mock_chunks: list, mock_citations: list) -> None:
+    logger.info("Starting test: %s", test_name)
+    logger.info("Question: %s", question)
     
     state = {
         "session_id": f"test_{test_name.replace(' ', '')}",
@@ -19,25 +27,27 @@ def test_citation(test_name, question, expected_sources, mock_chunks, mock_citat
         "answer": ""
     }
     
-    state = prompt_node(state)
-    state = generator_node(state) # This will automatically call filter_citations because we updated it
+    try:
+        state = prompt_node(state)
+        state = generator_node(state)
+    except Exception as e:
+        logger.exception("Failed to execute nodes during test: %s", test_name)
+        raise e
     
     citations = state.get("citations", [])
-    print(f"Answer: {state.get('answer', '')}")
-    print(f"Citations Returned: {len(citations)}")
+    logger.info("Answer: %s", state.get('answer', ''))
+    logger.info("Citations Returned count: %d", len(citations))
     
-    sources = set([c.get("source") for c in citations])
-    print(f"Sources: {sources}")
+    sources = set([c.get("source") for c in citations if c.get("source")])
+    logger.info("Sources returned: %s", sources)
     
     if expected_sources == set():
-        if len(citations) == 0:
-            print("PASS: Citation sources match expected (Empty).")
-        else:
-            print(f"FAIL: Expected Empty, got {sources}")
-    elif sources == expected_sources:
-        print("PASS: Citation sources match expected.")
+        assert len(citations) == 0, f"Expected Empty citations, got: {sources}"
+        logger.info("PASS: %s - Citation sources match expected (Empty).", test_name)
     else:
-        print(f"FAIL: Expected {expected_sources}, got {sources}")
+        assert sources == expected_sources, f"Expected {expected_sources}, got: {sources}"
+        logger.info("PASS: %s - Citation sources match expected.", test_name)
+
 
 if __name__ == "__main__":
     mock_chunks = [{
@@ -59,7 +69,16 @@ if __name__ == "__main__":
         {"source": "transcript", "video_id": "vidB456", "chunk_index": 0, "score": 0.92}
     ]
 
-    test_citation("Test 1 Metadata (Creator)", "Who is the creator of Video B?", {"metadata"}, mock_chunks, mock_citations)
-    test_citation("Test 2 Metadata (Engagement)", "What is the engagement rate of Video B?", {"metadata"}, mock_chunks, mock_citations)
-    test_citation("Test 3 Transcript", "What does Video A talk about?", {"transcript"}, mock_chunks, mock_citations)
-    test_citation("Test 4 Both", "Why might Video B have higher engagement?", {"metadata", "transcript"}, mock_chunks, mock_citations)
+    try:
+        test_citation("Test 1 Metadata (Creator)", "Who is the creator of Video B?", {"metadata"}, mock_chunks, mock_citations)
+        test_citation("Test 2 Metadata (Engagement)", "What is the engagement rate of Video B?", {"metadata"}, mock_chunks, mock_citations)
+        test_citation("Test 3 Transcript", "What does Video A talk about?", {"transcript"}, mock_chunks, mock_citations)
+        test_citation("Test 4 Both", "Why might Video B have higher engagement?", {"metadata", "transcript"}, mock_chunks, mock_citations)
+        logger.info("All citation verification tests passed successfully!")
+    except AssertionError as ae:
+        logger.error("Citation assertion check failed: %s", ae)
+        sys.exit(1)
+    except Exception as e:
+        logger.exception("Citation evaluation test suite failed with error.")
+        sys.exit(1)
+
