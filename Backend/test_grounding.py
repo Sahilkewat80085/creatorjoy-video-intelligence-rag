@@ -1,5 +1,7 @@
 import sys
 import os
+import logging
+from typing import Optional, List, Dict, Any
 
 # Ensure backend directory is in path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -7,12 +9,17 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from app.rag.nodes.prompt_node import prompt_node
 from app.rag.nodes.generator_node import generator_node
 
-def run_test(test_name, question, expected_phrase=None):
-    print(f"\n--- Running {test_name} ---")
-    print(f"Question: {question}")
+# Configure basic logging to stream to stdout
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+
+def run_test(test_name: str, question: str, expected_phrase: Optional[str] = None) -> None:
+    logger.info("Running test: %s", test_name)
+    logger.info("Question: %s", question)
     
     initial_state = {
-        "session_id": f"test_session_{test_name}",
+        "session_id": f"test_session_{test_name.replace(' ', '')}",
         "question": question,
         "history": [],
         "retrieved_chunks": [],
@@ -20,20 +27,23 @@ def run_test(test_name, question, expected_phrase=None):
         "answer": ""
     }
     
-    # Run only prompt and generator
-    state = prompt_node(initial_state)
-    result = generator_node(state)
-    answer = result.get("answer", "")
+    try:
+        # Run only prompt and generator nodes
+        state = prompt_node(initial_state)
+        result = generator_node(state)
+        answer = result.get("answer", "")
+    except Exception as e:
+        logger.exception("Node execution crashed during test: %s", test_name)
+        raise e
     
-    print(f"Answer: {answer}")
+    logger.info("Generated Answer: %s", answer)
     
     if expected_phrase:
-        if expected_phrase in answer:
-            print(f"PASS: Answer contains expected phrase: '{expected_phrase}'")
-        else:
-            print(f"FAIL: Answer does NOT contain expected phrase: '{expected_phrase}'")
-            
-def run_all_tests():
+        assert expected_phrase in answer, f"Expected phrase '{expected_phrase}' was not found in answer."
+        logger.info("PASS: Answer contains expected phrase: '%s'", expected_phrase)
+
+
+def run_all_tests() -> None:
     # Test A: Unrelated question
     run_test(
         "Test A (Unrelated Question)", 
@@ -46,39 +56,62 @@ def run_all_tests():
         "video_id": "DX4XJj9N8QH"
     }]
     
-    print(f"\n--- Running Test B ---")
+    logger.info("Running Test B (Creator identification check)...")
     question_b = "Who is the creator of Video B?"
-    print(f"Question: {question_b}")
-    
     state_b = {
-        "session_id": "test_b", "question": question_b, "history": [], 
-        "retrieved_chunks": mock_context_b_c, "citations": [], "answer": ""
+        "session_id": "test_b",
+        "question": question_b,
+        "history": [], 
+        "retrieved_chunks": mock_context_b_c,
+        "citations": [],
+        "answer": ""
     }
-    state_b = prompt_node(state_b)
-    result_b = generator_node(state_b)
     
-    print(f"Answer: {result_b.get('answer', '')}")
-    if "Shubhangi" in result_b.get('answer', ''):
-        print("PASS: Answer correctly identifies creator.")
-    else:
-        print("FAIL: Answer did not identify creator.")
+    try:
+        state_b = prompt_node(state_b)
+        result_b = generator_node(state_b)
+        answer_b = result_b.get('answer', '')
+    except Exception as e:
+        logger.exception("Failed to run Test B nodes.")
+        raise e
+        
+    logger.info("Answer: %s", answer_b)
+    assert "Shubhangi" in answer_b, "Answer did not identify creator ('Shubhangi')."
+    logger.info("PASS: Answer correctly identifies creator.")
 
-    print(f"\n--- Running Test C ---")
+    logger.info("Running Test C (Engagement rate verification)...")
     question_c = "What is the engagement rate of Video B?"
-    print(f"Question: {question_c}")
-    
     state_c = {
-        "session_id": "test_c", "question": question_c, "history": [], 
-        "retrieved_chunks": mock_context_b_c, "citations": [], "answer": ""
+        "session_id": "test_c",
+        "question": question_c,
+        "history": [], 
+        "retrieved_chunks": mock_context_b_c,
+        "citations": [],
+        "answer": ""
     }
-    state_c = prompt_node(state_c)
-    result_c = generator_node(state_c)
+    
+    try:
+        state_c = prompt_node(state_c)
+        result_c = generator_node(state_c)
+        answer_c = result_c.get('answer', '')
+    except Exception as e:
+        logger.exception("Failed to run Test C nodes.")
+        raise e
+        
+    logger.info("Answer: %s", answer_c)
+    assert "5.92" in answer_c, "Answer did not identify engagement rate ('5.92%')."
+    logger.info("PASS: Answer correctly identifies engagement rate.")
 
-    print(f"Answer: {result_c.get('answer', '')}")
-    if "5.92" in result_c.get('answer', ''):
-        print("PASS: Answer correctly identifies engagement rate.")
-    else:
-        print("FAIL: Answer did not identify engagement rate.")
 
 if __name__ == "__main__":
-    run_all_tests()
+    try:
+        run_all_tests()
+        logger.info("All citation grounding tests completed successfully!")
+        sys.exit(0)
+    except AssertionError as ae:
+        logger.error("Grounding assertion check failed: %s", ae)
+        sys.exit(1)
+    except Exception as e:
+        logger.exception("Grounding verification test suite failed with error.")
+        sys.exit(1)
+
