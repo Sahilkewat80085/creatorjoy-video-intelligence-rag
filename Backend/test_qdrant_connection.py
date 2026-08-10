@@ -1,75 +1,76 @@
 import os
+import sys
+import logging
 from dotenv import load_dotenv, find_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
 
-def mask_key(key):
+# Configure basic logging to stream to stdout
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+
+def mask_key(key: str) -> str:
+    """
+    Masks sensitive API key strings to prevent credentials leakage in logger files.
+    """
     if not key:
         return "None"
     if len(key) <= 8:
         return "*" * len(key)
     return key[:4] + "*" * (len(key) - 8) + key[-4:]
 
-def test_qdrant_connection():
+
+def test_qdrant_connection() -> None:
+    logger.info("Starting Qdrant Cloud Connection and CRUD Validation Test...")
     load_dotenv(find_dotenv())
     
     raw_url = os.getenv("QDRANT_URL", "")
     raw_key = os.getenv("QDRANT_API_KEY", "")
     
-    print("=== Qdrant Cloud Connection Test ===")
-    
-    print("\n--- Raw Environment Variables ---")
-    print(f"QDRANT_URL repr: {repr(raw_url)}")
-    print(f"QDRANT_API_KEY repr: {repr(raw_key)}")
-    print(f"QDRANT_API_KEY length: {len(raw_key)}")
-    print(f"QDRANT_API_KEY masked: {mask_key(raw_key)}")
-    
     qdrant_url = raw_url.strip()
     qdrant_api_key = raw_key.strip()
     
-    print("\n--- Sanitized Variables ---")
-    print(f"Sanitized URL repr: {repr(qdrant_url)}")
-    print(f"Sanitized API Key repr: {repr(qdrant_api_key)}")
-    print(f"Sanitized API Key length: {len(qdrant_api_key)}")
+    logger.info("QDRANT_URL target: %s", qdrant_url)
+    logger.info("QDRANT_API_KEY masked: %s", mask_key(qdrant_api_key))
     
     if not qdrant_url or not qdrant_api_key:
-        print("\n[ERROR] Missing URL or API Key!")
-        return
+        logger.error("Missing QDRANT_URL or QDRANT_API_KEY variables in environment configuration.")
+        sys.exit(1)
 
-    print("\n--- Testing Connection ---")
+    logger.info("Testing connection to cluster endpoint...")
     try:
+        # check_compatibility=False suppresses compatibility warnings
         client = QdrantClient(
             url=qdrant_url,
-            api_key=qdrant_api_key
+            api_key=qdrant_api_key,
+            check_compatibility=False
         )
         collections = client.get_collections()
-        print("[QDRANT] Connection successful")
-        print(f"Available collections: {[c.name for c in collections.collections]}")
+        logger.info("[QDRANT] Endpoint connection successful.")
+        logger.info("Available collections: %s", [c.name for c in collections.collections])
         
     except Exception as e:
-        print("[QDRANT] Connection failed")
-        print(f"Exception details: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return
+        logger.exception("[QDRANT] Endpoint connection failed.")
+        sys.exit(1)
 
-    print("\n--- Testing Read/Write Operations ---")
+    logger.info("Testing read/write operations on connection test collection...")
     test_collection = "connection_test"
     
     try:
-        # Re-create collection to ensure clean state
+        # Delete pre-existing collection to ensure clean validation setup
         try:
             client.delete_collection(test_collection)
         except Exception:
             pass
             
-        print(f"Creating collection '{test_collection}'...")
+        logger.info("Creating test collection '%s'...", test_collection)
         client.create_collection(
             collection_name=test_collection,
             vectors_config=VectorParams(size=4, distance=Distance.COSINE)
         )
         
-        print("Inserting dummy vector...")
+        logger.info("Inserting test vector point...")
         client.upsert(
             collection_name=test_collection,
             points=[
@@ -81,24 +82,28 @@ def test_qdrant_connection():
             ]
         )
         
-        print("Reading vector back...")
+        logger.info("Reading test vector back from collection...")
         result = client.retrieve(
             collection_name=test_collection,
             ids=[1]
         )
+        
         if result and len(result) > 0:
-            print(f"Successfully retrieved vector payload: {result[0].payload}")
+            logger.info("Successfully retrieved vector payload: %s", result[0].payload)
         else:
-            print("Failed to retrieve vector.")
+            raise ValueError("Failed to retrieve upserted vector.")
             
-        print("Deleting collection...")
+        logger.info("Deleting test collection '%s'...", test_collection)
         client.delete_collection(test_collection)
         
-        print("\n=== All Tests Passed Successfully ===")
+        logger.info("Qdrant read/write operations test passed successfully!")
+        sys.exit(0)
         
     except Exception as e:
-        print("[QDRANT] Operations test failed")
-        print(f"Exception details: {str(e)}")
+        logger.exception("[QDRANT] Operations test failed.")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     test_qdrant_connection()
+
